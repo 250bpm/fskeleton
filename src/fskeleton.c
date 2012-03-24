@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/******************************************************************************/
+/*  These are the structures used by the example filter. Please, replace      */
+/*  them with your own datastructures.                                        */
+/******************************************************************************/
+
 typedef struct
 {
     size_t nsubs;
@@ -20,6 +25,16 @@ typedef struct
 {
     int nodes [256]; 
 } sf_t;
+
+/******************************************************************************/
+/*  End of filter-related data structures.                                    */
+/******************************************************************************/
+
+/******************************************************************************/
+/*  Following functions implement the example filter functionality. Please,   */
+/*  keep the function definitions and replace the actual bodies of the        */
+/*  functions by your own filtering code.                                     */
+/******************************************************************************/
 
 static void *pf_create (void *core)
 {
@@ -69,8 +84,7 @@ static int pf_subscribe (void *core, void *pf, void *subscriber,
     }
     node->subs [node->nsubs - 1] = subscriber;
 
-    assert (0);
-    return -1;
+    return node->nsubs == 1 ? 1 : 0;
 }
 
 static int pf_unsubscribe (void *core, void *pf, void *subscriber,
@@ -99,18 +113,50 @@ static int pf_unsubscribe (void *core, void *pf, void *subscriber,
     memmove (node->subs + i + 1, node->subs + i,
         (node->nsubs - i - 1) * sizeof (void*));
     --node->nsubs;
-    node->subs = realloc (node->subs, node->nsubs * sizeof (void*));
-    if (!node->subs) {
-        errno = ENOMEM;
-        return -1;
+    if (!node->nsubs) {
+        free (node->subs);
+        node->subs = NULL;
+    }
+    else {
+        node->subs = realloc (node->subs, node->nsubs * sizeof (void*));
+        assert (node->subs);
     }
 
-    return 0;
+    return node->subs == 0 ? 1 : 0;
 }
 
 static void pf_unsubscribe_all (void *core, void *pf, void *subscriber)
 {
-    assert (0);
+    int i, j;
+    unsigned char c;
+    pf_t *self = (pf_t*) pf;
+    pf_node_t *node;
+
+    for (j = 0; j != 256; ++j) {
+        node = &self->nodes [j];
+
+        for (i = 0; i != node->nsubs; ++i)
+            if (node->subs [i] == subscriber)
+                break;
+
+        if (i == node->nsubs)
+            continue;
+
+        memmove (node->subs + i + 1, node->subs + i,
+            (node->nsubs - i - 1) * sizeof (void*));
+        --node->nsubs;
+        if (!node->nsubs) {
+            free (node->subs);
+            node->subs = NULL;
+        }
+        else {
+            node->subs = realloc (node->subs, node->nsubs * sizeof (void*));
+            assert (node->subs);
+        }
+
+        c = (unsigned char) j;
+        xs_filter_unsubscribed (core, &c, 1);
+    }
 }
 
 static void pf_match (void *core, void *pf,
@@ -157,7 +203,7 @@ static int sf_subscribe (void *core, void *sf,
     }
 
     ++(self->nodes [*data]);
-    return 0;
+    return self->nodes [*data] == 1 ? 1 : 0;
 }
 
 static int sf_unsubscribe (void *core, void *sf,
@@ -176,12 +222,20 @@ static int sf_unsubscribe (void *core, void *sf,
     }
 
     --(self->nodes [*data]);
-    return 0;
+    return self->nodes [*data] == 0 ? 1 : 0;
 }
 
 static void sf_enumerate (void *core, void *sf)
 {
-    assert (0);
+    int i;
+    unsigned char c;
+    sf_t *self = (sf_t*) sf;
+
+    for (i = 0; i != 256; ++i)
+        if (self->nodes [i] > 0) {
+            c = (unsigned char) i;
+            xs_filter_subscribed (core, &c, 1);
+        }
 }
 
 static int sf_match (void *core, void *sf,
@@ -194,6 +248,10 @@ static int sf_match (void *core, void *sf,
 
     return self->nodes [*data] ? 1 : 0;
 }
+
+/******************************************************************************/
+/*  End of filter implementation.                                             */
+/******************************************************************************/
 
 static xs_filter_t filter =  {
     XS_EXTENSION_FILTER,
@@ -213,3 +271,4 @@ static xs_filter_t filter =  {
 };
 
 void *xs_extension = (void*) &filter;
+
