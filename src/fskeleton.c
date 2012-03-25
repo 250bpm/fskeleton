@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../include/fskeleton.h"
+
 /******************************************************************************/
 /*  These are the structures used by the example filter. Please, replace      */
 /*  them with your own datastructures.                                        */
