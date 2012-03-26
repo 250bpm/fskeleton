@@ -1,6 +1,8 @@
 /INSTALL
 /Makefile
 /Makefile.in
+/configure
+/config.*
 /aclocal.m4
 /autom4te.cache/
 /depcomp
