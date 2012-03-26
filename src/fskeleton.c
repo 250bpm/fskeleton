@@ -59,6 +59,11 @@ typedef struct
 /*  functions by your own filtering code.                                     */
 /******************************************************************************/
 
+static int id (void *core)
+{
+    return 60000;
+}
+
 static void *pf_create (void *core)
 {
     int i;
@@ -279,7 +284,7 @@ static int sf_match (void *core, void *sf,
 static xs_filter_t filter =  {
     XS_PLUGIN_FILTER,
     1,
-    60000,
+    id,
     pf_create,
     pf_destroy,
     pf_subscribe,
