@@ -277,7 +277,8 @@ static int sf_match (void *core, void *sf,
 /******************************************************************************/
 
 static xs_filter_t filter =  {
-    XS_EXTENSION_FILTER,
+    XS_PLUGIN_FILTER,
+    1,
     60000,
     pf_create,
     pf_destroy,
