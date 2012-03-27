@@ -299,5 +299,5 @@ static xs_filter_t filter =  {
     sf_match
 };
 
-void *xs_extension = (void*) &filter;
+void *xsp_fskeleton_init = (void*) &filter;
 

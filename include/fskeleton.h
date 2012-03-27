@@ -44,4 +44,4 @@
 /*  Exported symbols.                                                         */
 /******************************************************************************/
 
-XS_EXPORT void *xs_extension;
+XS_EXPORT void *xsp_fskeleton_init;
